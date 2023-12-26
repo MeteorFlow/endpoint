@@ -7,14 +7,17 @@ from pydantic import ConfigDict, model_validator
 from sqlalchemy import Column, DateTime, Integer, event
 from sqlalchemy.dialects.postgresql import UUID
 
+
 def convert_datetime_to_gmt(dt: datetime) -> str:
     if not dt.tzinfo:
         dt = dt.replace(tzinfo=ZoneInfo("UTC"))
 
     return dt.strftime("%Y-%m-%dT%H:%M:%S%z")
 
+
 class MeteorBase(object):
     """Base class for all models"""
+
     model_config = ConfigDict(
         json_encoders={datetime: convert_datetime_to_gmt},
         populate_by_name=True,
@@ -23,11 +26,7 @@ class MeteorBase(object):
     @model_validator(mode="before")
     @classmethod
     def set_null_microseconds(cls, data: dict[str, Any]) -> dict[str, Any]:
-        datetime_fields = {
-            k: v.replace(microsecond=0)
-            for k, v in data.items()
-            if isinstance(k, datetime)
-        }
+        datetime_fields = {k: v.replace(microsecond=0) for k, v in data.items() if isinstance(k, datetime)}
 
         return {**data, **datetime_fields}
 
@@ -37,13 +36,18 @@ class MeteorBase(object):
 
         return jsonable_encoder(default_dict)
 
+
 class UUIDMixin(object):
     """UUID mixin"""
+
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+
 
 class IncrementalMixin(object):
     """ID mixin"""
-    id = Column(Integer, primary_key=True, autoincrement=True)   
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+
 
 class TimeStampMixin(object):
     """Timestamping mixin"""
@@ -61,6 +65,7 @@ class TimeStampMixin(object):
     def __declare_last__(cls):
         event.listen(cls, "before_update", cls._updated_at)
 
+
 class DeletedMixin(object):
     """Soft delete mixin"""
 
@@ -74,4 +79,3 @@ class DeletedMixin(object):
     @staticmethod
     def _deleted_at(mapper, connection, target):
         target.deleted_at = datetime.utcnow()
-

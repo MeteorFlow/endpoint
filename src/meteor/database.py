@@ -5,7 +5,7 @@ from fastapi import Depends
 from sqlalchemy import MetaData, create_engine, inspect
 from meteor import config
 from starlette.requests import Request
-from sqlalchemy.orm import object_session, sessionmaker, Session
+from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 
 engine = create_engine(
@@ -15,8 +15,10 @@ engine = create_engine(
     pool_pre_ping=config.DATABASE_ENGINE_POOL_PING,
 )
 
+
 def get_db(request: Request):
     return request.state.db
+
 
 DbSession = Annotated[Session, Depends(get_db)]
 
@@ -77,10 +79,7 @@ class BaseEntity:
         single = len(self.__repr_attrs__) == 1
         for key in self.__repr_attrs__:
             if not hasattr(self, key):
-                raise KeyError(
-                    "{} has incorrect attribute '{}' in "
-                    "__repr__attrs__".format(self.__class__, key)
-                )
+                raise KeyError("{} has incorrect attribute '{}' in " "__repr__attrs__".format(self.__class__, key))
             value = getattr(self, key)
             wrap_in_quote = isinstance(value, str)
 

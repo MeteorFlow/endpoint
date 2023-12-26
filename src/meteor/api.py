@@ -3,8 +3,10 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
+
 class ErrorMessage(BaseModel):
     msg: str
+
 
 class ErrorResponse(BaseModel):
     detail: Optional[List[ErrorMessage]]
@@ -20,6 +22,7 @@ api_router = APIRouter(
         500: {"model": ErrorResponse},
     },
 )
+
 
 @api_router.get("/healthcheck", include_in_schema=True)
 def healthcheck():

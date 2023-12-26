@@ -20,6 +20,7 @@ ROOT_PATH = os.path.abspath(os.path.dirname(__file__))
 VERSION = "0.1.0.dev0"
 IS_LIGHT_BUILD = os.environ.get("DISPATCH_LIGHT_BUILD") == "1"
 
+
 # modified from:
 # https://raw.githubusercontent.com/getsentry/sentry/055cfe74bb88bbb2083f37f5df21b91d0ef4f9a7/src/sentry/utils/distutils/commands/base.py
 class BaseBuildCommand(Command):
@@ -35,8 +36,7 @@ class BaseBuildCommand(Command):
         (
             "force",
             "f",
-            "Force rebuilding of static content. Defaults to rebuilding on version "
-            "change detection.",
+            "Force rebuilding of static content. Defaults to rebuilding on version " "change detection.",
         ),
     ]
 
@@ -183,7 +183,7 @@ class BaseBuildCommand(Command):
             for dirname, _, filenames in os.walk(os.path.abspath(path)):
                 for filename in filenames:
                     filename = os.path.join(dirname, filename)
-                    files.append(filename[len(base) :].lstrip(os.path.sep))
+                    files.append(filename[len(base):].lstrip(os.path.sep))
 
         for file in self.get_manifest_additions():
             files.append(file)
@@ -194,6 +194,7 @@ class BaseBuildCommand(Command):
             self._setup_js_deps()
             self._build()
             self.update_manifests()
+
 
 class BuildAssetsCommand(BaseBuildCommand):
     user_options = BaseBuildCommand.user_options + [
@@ -211,8 +212,7 @@ class BuildAssetsCommand(BaseBuildCommand):
         (
             "force",
             "f",
-            "Force rebuilding of static content. Defaults to rebuilding on version "
-            "change detection.",
+            "Force rebuilding of static content. Defaults to rebuilding on version " "change detection.",
         ),
     ]
 
@@ -312,9 +312,7 @@ class BuildAssetsCommand(BaseBuildCommand):
         env["DISPATCH_STATIC_DIST_PATH"] = self.meteor_static_dist_path
         env["NODE_ENV"] = "production"
         # TODO: Our JS builds should not require 4GB heap space
-        env["NODE_OPTIONS"] = (
-            (env.get("NODE_OPTIONS", "") + " --max-old-space-size=4096")
-        ).lstrip()
+        env["NODE_OPTIONS"] = ((env.get("NODE_OPTIONS", "") + " --max-old-space-size=4096")).lstrip()
         # self._run_npm_command(["webpack", "--bail"], env=env)
 
     def _write_version_file(self, version_info):
@@ -333,6 +331,7 @@ class BuildAssetsCommand(BaseBuildCommand):
 
     def get_asset_json_path(self):
         return os.path.abspath(os.path.join(self.build_lib, self.asset_json_path))
+
 
 class DispatchSDistCommand(SDistCommand):
     # If we are not a light build we want to also execute build_assets as
@@ -354,6 +353,7 @@ class DispatchDevelopCommand(DevelopCommand):
         if not IS_LIGHT_BUILD:
             self.run_command("build_assets")
 
+
 cmdclass = {
     "sdist": DispatchSDistCommand,
     "develop": DispatchDevelopCommand,
@@ -362,10 +362,10 @@ cmdclass = {
 }
 
 
-
 def get_requirements(env):
     with open("requirements/{}.txt".format(env)) as fp:
         return [x.strip() for x in fp.read().split("\n") if not x.startswith("#")]
+
 
 install_requires = get_requirements("base")
 dev_requires = get_requirements("dev")

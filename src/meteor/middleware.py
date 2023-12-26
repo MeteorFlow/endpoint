@@ -6,17 +6,14 @@ from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoin
 
 log = logging.getLogger(__name__)
 
+
 class ExceptionMiddleware(BaseHTTPMiddleware):
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> StreamingResponse:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> StreamingResponse:
         try:
             response = await call_next(request)
         except ValidationError as e:
             log.exception(e)
-            response = JSONResponse(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, content={"detail": e.errors()}
-            )
+            response = JSONResponse(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, content={"detail": e.errors()})
         except ValueError as e:
             log.exception(e)
             response = JSONResponse(

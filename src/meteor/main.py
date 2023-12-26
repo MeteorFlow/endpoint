@@ -1,7 +1,7 @@
-import time
+# import time
 import logging
-from os import path
-from uuid import uuid1
+# from os import path
+# from uuid import uuid1
 
 from fastapi import APIRouter, FastAPI, Request, status
 from fastapi.responses import JSONResponse
@@ -20,11 +20,12 @@ from .api import api_router
 log = logging.getLogger(__name__)
 configure_logging()
 
+
 #
 async def not_found(request, exc):
-    return JSONResponse(
-        status_code=status.HTTP_404_NOT_FOUND, content={"detail": [{"msg": "Not Found."}]}
-    )
+    return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"detail": [{"msg": "Not Found."}]})
+
+
 exception_handlers = {404: not_found}
 
 
@@ -49,6 +50,7 @@ def get_path_template(request: Request) -> str:
     if hasattr(request, "path"):
         return ",".join(request.path.split("/")[1:])
     return ".".join(request.url.path.split("/")[1:])
+
 
 api = FastAPI(
     title="meteorDB API",

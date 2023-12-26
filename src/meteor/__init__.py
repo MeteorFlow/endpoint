@@ -1,6 +1,6 @@
 import os
 import os.path
-import traceback
+# import traceback
 from subprocess import check_output
 
 try:

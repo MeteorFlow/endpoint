@@ -47,9 +47,7 @@ if SECRET_PROVIDER == "kms-secret":
         def __init__(self, value: str):
             self._value = value
             self._decrypted_value = (
-                boto3.client("kms")
-                .decrypt(CiphertextBlob=base64.b64decode(value))["Plaintext"]
-                .decode("utf-8")
+                boto3.client("kms").decrypt(CiphertextBlob=base64.b64decode(value))["Plaintext"].decode("utf-8")
             )
 
         def __repr__(self) -> str:

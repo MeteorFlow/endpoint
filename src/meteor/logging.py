@@ -6,6 +6,7 @@ from meteor.enums import MeteorEnum
 
 LOG_FORMAT_DEBUG = "%(levelname)s:%(message)s:%(pathname)s:%(funcName)s:%(lineno)d"
 
+
 class LogLevels(MeteorEnum):
     info = "INFO"
     warn = "WARN"
