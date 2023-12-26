@@ -1,5 +1,6 @@
 attrs==22.1.0
 flake8
+isort
 black
 click
 coverage
