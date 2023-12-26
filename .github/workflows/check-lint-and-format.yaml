@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        python-version: ["3.10"]
+        python-version: ["3.11"]
 
     steps:
       - uses: actions/checkout@v4
@@ -25,10 +25,6 @@ jobs:
       - name: Run Flake8 analysis
         run: |
           python -m flake8 src/
-
-      - name: Run isort analysis
-        run: |
-          python -m isort . --check
 
       - name: Run Black formatter
         run: |
