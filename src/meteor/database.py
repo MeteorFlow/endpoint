@@ -1,12 +1,14 @@
 import functools
 import re
 from typing import Annotated
+
 from fastapi import Depends
 from sqlalchemy import MetaData, create_engine, inspect
-from meteor import config
-from starlette.requests import Request
-from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
+from sqlalchemy.orm import Session, sessionmaker
+from starlette.requests import Request
+
+from meteor import config
 
 engine = create_engine(
     config.SQLALCHEMY_DATABASE_URI,

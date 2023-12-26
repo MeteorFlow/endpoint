@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Any
 from uuid import uuid4
 from zoneinfo import ZoneInfo
+
 from fastapi.encoders import jsonable_encoder
 from pydantic import ConfigDict, model_validator
 from sqlalchemy import Column, DateTime, Integer, event

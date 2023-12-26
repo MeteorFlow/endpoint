@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from sqlalchemy import Column, String
-from meteor.database import Base
 
+from meteor.database import Base
 from meteor.models import UUIDMixin
 
 

@@ -4,6 +4,7 @@
     :license: Apache, see LICENSE for more details.
 """
 import logging
+
 from meteor.exceptions import InvalidConfigurationError
 
 logger = logging.getLogger(__name__)

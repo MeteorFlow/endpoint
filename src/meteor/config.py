@@ -1,7 +1,8 @@
+import base64
 import logging
 import os
-import base64
 from urllib import parse
+
 from starlette.config import Config
 
 log = logging.getLogger(__name__)
