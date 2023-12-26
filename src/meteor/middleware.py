@@ -3,8 +3,7 @@ import logging
 from fastapi import Request, status
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic.error_wrappers import ValidationError
-from starlette.middleware.base import (BaseHTTPMiddleware,
-                                       RequestResponseEndpoint)
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 
 log = logging.getLogger(__name__)
 
