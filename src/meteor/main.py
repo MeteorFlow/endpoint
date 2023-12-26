@@ -14,10 +14,6 @@ from .logging import configure_logging
 # from uuid import uuid1
 
 
-
-
-
-
 # we configure the logging level and format
 log = logging.getLogger(__name__)
 configure_logging()

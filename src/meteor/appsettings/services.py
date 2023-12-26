@@ -7,7 +7,6 @@ from meteor.database import DbSession
 # from sqlalchemy import insert, select
 
 
-
 def get_app_setting_by_id(*, db_session: DbSession, setting_id: UUID) -> Optional[AppSettings]:
     return db_session.query(AppSettings).filter(AppSettings.id == setting_id).first()
 
