@@ -1,0 +1,7 @@
+attrs==22.1.0
+black
+click
+coverage
+devtools
+faker
+pytest

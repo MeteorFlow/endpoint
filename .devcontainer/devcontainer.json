@@ -1,0 +1,33 @@
+{
+  "name": "meteorDB - Airflow Dev Container",
+  "features": {
+    "ghcr.io/devcontainers-contrib/features/fzf:1": {},
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "configureZshAsDefaultShell": true
+    },
+    "ghcr.io/devcontainers-contrib/features/zsh-plugins:0": {
+      "omzPlugins": "docker git python dotenv"
+    }
+  },
+  "dockerComposeFile": [
+    "../docker-compose.yaml",
+    "./docker-compose.devcontainer.yaml",
+  ],
+  "service": "dev_container",
+  "workspaceFolder": "/${localWorkspaceFolderBasename}",
+  "postStartCommand": "./bin/init-airflow.sh",
+  "shutdownAction": "stopCompose",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.black-formatter",
+        "ms-python.flake8",
+        "ms-python.isort"
+      ]
+    }
+  }
+}

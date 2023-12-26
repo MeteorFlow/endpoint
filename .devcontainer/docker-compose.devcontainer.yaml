@@ -1,0 +1,19 @@
+services:
+  dev_container:
+    build: 
+      context: .
+      dockerfile: .devcontainer/Dockerfile.dev
+    environment:
+      - AIRFLOW_HOME=/meteorDB/airflow
+      - AIRFLOW__DATABASE__LOAD_DEFAULT_CONNECTIONS=False
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql://airflow:airflow@postgres/airflow_db
+      - AIRFLOW__CORE__FERNET_KEY=Djud-KLutaD3iTtLAlRG1tPecZBHt8GazSi_1juEpRQ=
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__CORE__TEST_CONNECTION=Enabled
+      - AIRFLOW__WEBSERVER__SESSION_BACKEND=securecookie
+    volumes:
+      - ./:/meteorDB:cached
+    ports:
+      - "8080:8080"
+    # Overrides default command so things don't shut down after the process ends.
+    command: sleep infinity

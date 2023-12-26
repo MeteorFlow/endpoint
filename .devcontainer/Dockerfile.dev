@@ -1,0 +1,7 @@
+FROM mcr.microsoft.com/devcontainers/python:1-3.11-bullseye
+
+# RUN ls -la
+WORKDIR /meteorDB
+
+COPY requirements.txt requirements.dev.txt ./
+RUN pip install -r requirements.txt -r requirements.dev.txt
