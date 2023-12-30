@@ -1,0 +1,103 @@
+openapi: "3.0.2"
+info:
+  title: MeteorFlow
+  version: "0.1"
+servers:
+  - url: https://api.server.test/v1
+paths:
+  /reflectivity:
+    get:
+      summary: Captured Equivalent Reflectivity Factor
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FetchRequest'
+      responses:
+        "200":
+          description: Operation success
+          content:
+            application/octet-stream:
+              schema:
+                format: binary
+
+  /velocity:
+    get:
+      summary: Get captured Radial velocity of scatterers away from instrument
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FetchRequest'
+      responses:
+        "200":
+          description: Operation success
+          content:
+            application/octet-stream:
+              schema:
+                format: binary
+
+  /spectrum-width:
+    get:
+      summary: Get captured Doppler spectrum width
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FetchRequest'
+      responses:
+        "200":
+          description: Operation success
+          content:
+            application/octet-stream:
+              schema:
+                format: binary
+
+
+components:
+  schemas:
+    FetchRequest:
+      type: object
+      properties:
+        startDate:
+          description: The retrieval date, or the start of the capturing Date Time range (if `endDate` is specified)
+          type: string
+          format: date-time
+        endDate:
+          description: Null if capture at a single checkpoint, or the end of range
+          type: string
+          nullable: true
+          format: date-time
+        upperLeftCoordinate:
+          description: The Coordinate of rectangle's upper corner representing the radar capturing area.
+          type: object
+          properties:
+            lat:
+              description: Latitude of the coordinate
+              type: number
+              format: float
+              example: 11.210
+            long:
+              description: Longitude of the coordinate
+              type: number
+              format: float
+              example: 106.17
+        lowerRightCoordinate:
+          description: The Coordinate of rectangle's lower right corner representing the radar capturing area.
+          type: object
+          properties:
+            lat:
+              description: Latitude of the coordinate
+              type: number
+              format: float
+              example: 10.110
+            long:
+              description: Longitude of the coordinate
+              type: number
+              format: float
+              example: 107.29
+        resolution:
+          description: How many points per width/height of the return array?
+          type: integer
+          example: 256
+
