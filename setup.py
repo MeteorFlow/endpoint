@@ -18,7 +18,7 @@ from setuptools.command.sdist import sdist as SDistCommand
 ROOT_PATH = os.path.abspath(os.path.dirname(__file__))
 
 VERSION = "0.1.0.dev0"
-IS_LIGHT_BUILD = os.environ.get("DISPATCH_LIGHT_BUILD") == "1"
+IS_LIGHT_BUILD = os.environ.get("METEOR_LIGHT_BUILD") == "1"
 
 
 # modified from:
@@ -183,7 +183,7 @@ class BaseBuildCommand(Command):
             for dirname, _, filenames in os.walk(os.path.abspath(path)):
                 for filename in filenames:
                     filename = os.path.join(dirname, filename)
-                    files.append(filename[len(base):].lstrip(os.path.sep))
+                    files.append(filename[len(base) :].lstrip(os.path.sep))
 
         for file in self.get_manifest_additions():
             files.append(file)
@@ -231,7 +231,7 @@ class BuildAssetsCommand(BaseBuildCommand):
 
     def _get_package_version(self):
         """
-        Attempt to get the most correct current version of Dispatch.
+        Attempt to get the most correct current version of Meteor.
         """
         pkg_path = os.path.join(ROOT_PATH, "src")
 
@@ -297,7 +297,7 @@ class BuildAssetsCommand(BaseBuildCommand):
             self._build_static()
         except Exception:
             traceback.print_exc()
-            log.fatal("unable to build Dispatch's static assets!")
+            log.fatal("unable to build Meteor's static assets!")
             sys.exit(1)
 
         log.info("writing version manifest")
@@ -309,7 +309,7 @@ class BuildAssetsCommand(BaseBuildCommand):
         #   * Vue optimizes out certain code paths
         #   * Webpack will add version strings to built/referenced assets
         env = dict(os.environ)
-        env["DISPATCH_STATIC_DIST_PATH"] = self.meteor_static_dist_path
+        env["METEOR_STATIC_DIST_PATH"] = self.meteor_static_dist_path
         env["NODE_ENV"] = "production"
         # TODO: Our JS builds should not require 4GB heap space
         env["NODE_OPTIONS"] = ((env.get("NODE_OPTIONS", "") + " --max-old-space-size=4096")).lstrip()
@@ -333,21 +333,21 @@ class BuildAssetsCommand(BaseBuildCommand):
         return os.path.abspath(os.path.join(self.build_lib, self.asset_json_path))
 
 
-class DispatchSDistCommand(SDistCommand):
+class MeteorSDistCommand(SDistCommand):
     # If we are not a light build we want to also execute build_assets as
     # part of our source build pipeline.
     if not IS_LIGHT_BUILD:
         sub_commands = SDistCommand.sub_commands + [("build_assets", None)]
 
 
-class DispatchBuildCommand(BuildCommand):
+class MeteorBuildCommand(BuildCommand):
     def run(self):
         if not IS_LIGHT_BUILD:
             self.run_command("build_assets")
         BuildCommand.run(self)
 
 
-class DispatchDevelopCommand(DevelopCommand):
+class MeteorDevelopCommand(DevelopCommand):
     def run(self):
         DevelopCommand.run(self)
         if not IS_LIGHT_BUILD:
@@ -355,9 +355,9 @@ class DispatchDevelopCommand(DevelopCommand):
 
 
 cmdclass = {
-    "sdist": DispatchSDistCommand,
-    "develop": DispatchDevelopCommand,
-    "build": DispatchBuildCommand,
+    "sdist": MeteorSDistCommand,
+    "develop": MeteorDevelopCommand,
+    "build": MeteorBuildCommand,
     # "build_assets": BuildAssetsCommand,
 }
 
@@ -390,4 +390,12 @@ setup(
     cmdclass=cmdclass,
     zip_safe=False,
     include_package_data=True,
+        entry_points={
+        "console_scripts": ["meteor = meteor.cli:entrypoint"],
+        "meteor.plugins": [
+            "meteor_basic_auth = meteor.plugins.core.plugin:BasicAuthProviderPlugin",
+            "meteor_header_auth = meteor.plugins.core.plugin:HeaderAuthProviderPlugin",
+            "meteor_pkce_auth = meteor.plugins.core.plugin:PKCEAuthProviderPlugin",
+        ],
+    },
 )

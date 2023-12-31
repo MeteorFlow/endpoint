@@ -9,7 +9,7 @@ log = logging.getLogger(__name__)
 
 
 class ExceptionMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> StreamingResponse:
+    async def meteor(self, request: Request, call_next: RequestResponseEndpoint) -> StreamingResponse:
         try:
             response = await call_next(request)
         except ValidationError as e:

@@ -2,7 +2,7 @@ from typing import Optional
 from uuid import UUID
 
 from meteor.appsettings.models import AppSettings, AppSettingsEntity
-from meteor.database import DbSession
+from meteor.database.core import DbSession
 
 # from sqlalchemy import insert, select
 

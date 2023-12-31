@@ -1,3 +1,5 @@
+import re
+from typing import Type
 from datetime import datetime
 from typing import Any
 from uuid import uuid4
@@ -9,12 +11,13 @@ from sqlalchemy import Column, DateTime, Integer, event
 from sqlalchemy.dialects.postgresql import UUID
 
 
+NameStr = Type[re.compile(r"^(?!\s*$).+", flags=re.DOTALL)]
+
 def convert_datetime_to_gmt(dt: datetime) -> str:
     if not dt.tzinfo:
         dt = dt.replace(tzinfo=ZoneInfo("UTC"))
 
     return dt.strftime("%Y-%m-%dT%H:%M:%S%z")
-
 
 class MeteorBase(object):
     """Base class for all models"""
@@ -37,6 +40,10 @@ class MeteorBase(object):
 
         return jsonable_encoder(default_dict)
 
+class Pagination(MeteorBase):
+    itemsPerPage: int
+    page: int
+    total: int
 
 class UUIDMixin(object):
     """UUID mixin"""

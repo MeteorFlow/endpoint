@@ -4,7 +4,7 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 
 from meteor.config import SQLALCHEMY_DATABASE_URI
-from meteor.database import Base
+from meteor.database.core import Base
 
 # from logging.config import fileConfig
 
@@ -32,7 +32,7 @@ config.set_main_option("sqlalchemy.url", str(SQLALCHEMY_DATABASE_URI))
 
 target_metadata = Base.metadata  # noqa
 
-CORE_SCHEMA_NAME = "dispatch_core"
+CORE_SCHEMA_NAME = "meteor_core"
 
 
 def include_object(object, name, type_, reflected, compare_to):

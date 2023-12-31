@@ -1,4 +1,4 @@
-from pydantic.errors import PydanticValueError
+from pydantic.errors import PydanticUserError
 
 
 class MeteorException(Exception):
@@ -9,41 +9,41 @@ class MeteorPluginException(MeteorException):
     pass
 
 
-class NotFoundError(PydanticValueError):
+class NotFoundError(PydanticUserError):
     code = "not_found"
     msg_template = "{msg}"
 
 
-class FieldNotFoundError(PydanticValueError):
+class FieldNotFoundError(PydanticUserError):
     code = "not_found.field"
     msg_template = "{msg}"
 
 
-class ModelNotFoundError(PydanticValueError):
+class ModelNotFoundError(PydanticUserError):
     code = "not_found.model"
     msg_template = "{msg}"
 
 
-class ExistsError(PydanticValueError):
+class ExistsError(PydanticUserError):
     code = "exists"
     msg_template = "{msg}"
 
 
-class InvalidConfigurationError(PydanticValueError):
+class InvalidConfigurationError(PydanticUserError):
     code = "invalid.configuration"
     msg_template = "{msg}"
 
 
-class InvalidFilterError(PydanticValueError):
+class InvalidFilterError(PydanticUserError):
     code = "invalid.filter"
     msg_template = "{msg}"
 
 
-class InvalidUsernameError(PydanticValueError):
+class InvalidUsernameError(PydanticUserError):
     code = "invalid.username"
     msg_template = "{msg}"
 
 
-class InvalidPasswordError(PydanticValueError):
+class InvalidPasswordError(PydanticUserError):
     code = "invalid.password"
     msg_template = "{msg}"

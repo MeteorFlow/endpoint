@@ -1,14 +1,19 @@
 import functools
 import re
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import Depends
 from sqlalchemy import MetaData, create_engine, inspect
+from sqlalchemy.sql.expression import true
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session, sessionmaker, object_session
+from sqlalchemy_utils import get_mapper
+from pydantic.errors import PydanticErrorMixin
 from starlette.requests import Request
 
 from meteor import config
+from meteor.exceptions import NotFoundError
+from meteor.search.fulltext import make_searchable
 
 engine = create_engine(
     config.SQLALCHEMY_DATABASE_URI,
@@ -107,3 +112,71 @@ class BaseEntity:
 
 
 Base = declarative_base(cls=BaseEntity)
+make_searchable(Base.metadata)
+
+
+def get_model_name_by_tablename(table_fullname: str) -> str:
+    """Returns the model name of a given table."""
+    return get_class_by_tablename(table_fullname=table_fullname).__name__
+
+
+def get_class_by_tablename(table_fullname: str) -> Any:
+    """Return class reference mapped to table."""
+
+    def _find_class(name):
+        for c in Base._decl_class_registry.values():
+            if hasattr(c, "__table__"):
+                if c.__table__.fullname.lower() == name.lower():
+                    return c
+
+    mapped_name = resolve_table_name(table_fullname)
+    mapped_class = _find_class(mapped_name)
+
+    # try looking in the 'dispatch_core' schema
+    if not mapped_class:
+        mapped_class = _find_class(f"dispatch_core.{mapped_name}")
+
+    if not mapped_class:
+        raise PydanticErrorMixin(
+            NotFoundError(msg="Model not found. Check the name of your model."),
+            loc="filter",
+        )
+
+    return mapped_class
+
+
+def get_table_name_by_class_instance(class_instance: Base) -> str:
+    """Returns the name of the table for a given class instance."""
+    return class_instance._sa_instance_state.mapper.mapped_table.name
+
+
+def ensure_unique_default_per_project(target, value, oldvalue, initiator):
+    """Ensures that only one row in table is specified as the default."""
+    session = object_session(target)
+    if session is None:
+        return
+
+    mapped_cls = get_mapper(target)
+
+    if value:
+        previous_default = (
+            session.query(mapped_cls)
+            .filter(mapped_cls.columns.default == true())
+            .filter(mapped_cls.columns.project_id == target.project_id)
+            .one_or_none()
+        )
+        if previous_default:
+            # we want exclude updating the current default
+            if previous_default.id != target.id:
+                previous_default.default = False
+                session.commit()
+
+
+def refetch_db_session(organization_slug: str) -> Session:
+    schema_engine = engine.execution_options(
+        schema_translate_map={
+            None: f"dispatch_organization_{organization_slug}",
+        }
+    )
+    db_session = sessionmaker(bind=schema_engine)()
+    return db_session
