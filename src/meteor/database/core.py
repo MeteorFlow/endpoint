@@ -132,9 +132,9 @@ def get_class_by_tablename(table_fullname: str) -> Any:
     mapped_name = resolve_table_name(table_fullname)
     mapped_class = _find_class(mapped_name)
 
-    # try looking in the 'dispatch_core' schema
+    # try looking in the 'meteor_core' schema
     if not mapped_class:
-        mapped_class = _find_class(f"dispatch_core.{mapped_name}")
+        mapped_class = _find_class(f"meteor_core.{mapped_name}")
 
     if not mapped_class:
         raise PydanticErrorMixin(
@@ -175,7 +175,7 @@ def ensure_unique_default_per_project(target, value, oldvalue, initiator):
 def refetch_db_session(organization_slug: str) -> Session:
     schema_engine = engine.execution_options(
         schema_translate_map={
-            None: f"dispatch_organization_{organization_slug}",
+            None: f"meteor_organization_{organization_slug}",
         }
     )
     db_session = sessionmaker(bind=schema_engine)()

@@ -10,6 +10,7 @@ from sqlalchemy_utils import create_database, database_exists
 
 from meteor import config
 from meteor.organization.models import Organization
+from meteor.plugins.base.v1 import Plugin
 from meteor.search import fulltext
 from meteor.search.fulltext import (
     sync_trigger,
@@ -90,24 +91,24 @@ def init_database(engine):
     init_schema(engine=engine, organization=organization)
 
     # we install all plugins
-    # from meteor.common.utils.cli import install_plugins
-    # from meteor.plugins.base import plugins
+    from meteor.common.cli import install_plugins
+    from meteor.plugins.base import plugins
 
-    # install_plugins()
+    install_plugins()
 
-    # for p in plugins.all():
-    #     plugin = Plugin(
-    #         title=p.title,
-    #         slug=p.slug,
-    #         type=p.type,
-    #         version=p.version,
-    #         author=p.author,
-    #         author_url=p.author_url,
-    #         multiple=p.multiple,
-    #         description=p.description,
-    #     )
-    #     db_session.add(plugin)
-    # db_session.commit()
+    for p in plugins.all():
+        plugin = Plugin(
+            title=p.title,
+            slug=p.slug,
+            type=p.type,
+            version=p.version,
+            author=p.author,
+            author_url=p.author_url,
+            multiple=p.multiple,
+            description=p.description,
+        )
+        db_session.add(plugin)
+    db_session.commit()
 
 
 def init_schema(*, engine, organization: Organization):

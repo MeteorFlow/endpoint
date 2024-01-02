@@ -431,7 +431,6 @@ def revision_database(message, autogenerate, revision_type, sql, head, splice, b
     from alembic.config import Config as AlembicConfig
 
     alembic_cfg = AlembicConfig(config.ALEMBIC_INI_PATH)
-
     if revision_type:
         if revision_type == "core":
             path = config.ALEMBIC_CORE_REVISION_PATH
@@ -456,6 +455,7 @@ def revision_database(message, autogenerate, revision_type, sql, head, splice, b
             config.ALEMBIC_CORE_REVISION_PATH,
             config.ALEMBIC_TENANT_REVISION_PATH,
         ]:
+            print(path)
             alembic_cfg.set_main_option("script_location", path)
             alembic_cfg.cmd_opts = types.SimpleNamespace(cmd="revision")
             alembic_command.revision(

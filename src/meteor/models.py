@@ -12,6 +12,7 @@ from sqlalchemy.dialects.postgresql import UUID
 
 
 NameStr = Type[re.compile(r"^(?!\s*$).+", flags=re.DOTALL)]
+OrganizationSlug = Type[re.compile(r"^[\w]+(?:_[\w]+)*$", flags=re.DOTALL)]
 
 def convert_datetime_to_gmt(dt: datetime) -> str:
     if not dt.tzinfo:

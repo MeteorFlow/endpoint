@@ -2,7 +2,7 @@ import string
 import secrets
 from typing import List
 from datetime import datetime, timedelta
-from uuid import UUID
+from sqlalchemy.dialects.postgresql import UUID
 
 import bcrypt
 from jose import jwt
@@ -22,8 +22,8 @@ from meteor.config import (
 )
 from meteor.database.core import Base
 from meteor.enums import UserRoles
-from meteor.models import TimeStampMixin, MeteorBase, Pagination, UUIDMixin
-from meteor.organization.models import OrganizationRead
+from meteor.models import OrganizationSlug, TimeStampMixin, MeteorBase, Pagination, UUIDMixin
+from meteor.organization.models import Organization, OrganizationRead
 
 
 def generate_password():
@@ -73,20 +73,20 @@ class MeteorUser(Base, TimeStampMixin, UUIDMixin):
         }
         return jwt.encode(data, METEOR_JWT_SECRET, algorithm=METEOR_JWT_ALG)
 
-    # def get_organization_role(self, organization_slug: OrganizationSlug):
-    #     """Gets the user's role for a given organization slug."""
-    #     for o in self.organizations:
-    #         if o.organization.slug == organization_slug:
-    #             return o.role
+    def get_organization_role(self, organization_slug: OrganizationSlug):
+        """Gets the user's role for a given organization slug."""
+        for o in self.organizations:
+            if o.organization.slug == organization_slug:
+                return o.role
 
 
 class MeteorUserOrganization(Base, TimeStampMixin):
     __table_args__ = {"schema": "meteor_core"}
-    meteor_user_id = Column(Integer, ForeignKey(MeteorUser.id), primary_key=True)
+    meteor_user_id = Column(UUID(as_uuid=True), ForeignKey(MeteorUser.id), primary_key=True)
     meteor_user = relationship(MeteorUser, backref="organizations")
 
-    # organization_id = Column(Integer, ForeignKey(Organization.id), primary_key=True)
-    # organization = relationship(Organization, backref="users")
+    organization_id = Column(Integer, ForeignKey(Organization.id), primary_key=True)
+    organization = relationship(Organization, backref="users")
 
     role = Column(String, default=UserRoles.member)
 
