@@ -6,13 +6,13 @@ from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 from fastapi.encoders import jsonable_encoder
-from pydantic import ConfigDict, model_validator
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy import Column, DateTime, Integer, event
 from sqlalchemy.dialects.postgresql import UUID
 
-
 NameStr = Type[re.compile(r"^(?!\s*$).+", flags=re.DOTALL)]
-OrganizationSlug = Type[re.compile(r"^[\w]+(?:_[\w]+)*$", flags=re.DOTALL)]
+OrganizationSlug = Type[re.compile(r"^\w+(?:_\w+)*$", flags=re.DOTALL)]
+
 
 def convert_datetime_to_gmt(dt: datetime) -> str:
     if not dt.tzinfo:
@@ -20,7 +20,8 @@ def convert_datetime_to_gmt(dt: datetime) -> str:
 
     return dt.strftime("%Y-%m-%dT%H:%M:%S%z")
 
-class MeteorBase(object):
+
+class MeteorBase(BaseModel):
     """Base class for all models"""
 
     model_config = ConfigDict(
@@ -28,7 +29,6 @@ class MeteorBase(object):
         populate_by_name=True,
     )
 
-    @model_validator(mode="before")
     @classmethod
     def set_null_microseconds(cls, data: dict[str, Any]) -> dict[str, Any]:
         datetime_fields = {k: v.replace(microsecond=0) for k, v in data.items() if isinstance(k, datetime)}
@@ -41,10 +41,12 @@ class MeteorBase(object):
 
         return jsonable_encoder(default_dict)
 
+
 class Pagination(MeteorBase):
     itemsPerPage: int
     page: int
     total: int
+
 
 class UUIDMixin(object):
     """UUID mixin"""

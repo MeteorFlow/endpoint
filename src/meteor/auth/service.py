@@ -6,31 +6,29 @@
 """
 import logging
 from typing import Annotated, Optional
+from uuid import UUID
 
 from fastapi import HTTPException, Depends
 from starlette.requests import Request
 from starlette.status import HTTP_401_UNAUTHORIZED
+from sqlalchemy import select, insert, update
 from sqlalchemy.exc import IntegrityError
+from meteor.auth.schema import UserCreate, UserOrganization, UserRegister, UserUpdate
 
 from meteor.config import (
     METEOR_AUTHENTICATION_PROVIDER_SLUG,
     METEOR_AUTHENTICATION_DEFAULT_USER,
 )
+from meteor.database.core import DbSession
 from meteor.enums import UserRoles
 from meteor.organization import service as organization_service
 from meteor.organization.models import OrganizationRead
 from meteor.plugins.base import plugins
 
-
 from .models import (
     MeteorUser,
     MeteorUserOrganization,
-    UserOrganization,
-    UserRegister,
-    UserUpdate,
-    UserCreate,
 )
-
 
 log = logging.getLogger(__name__)
 
@@ -39,31 +37,37 @@ InvalidCredentialException = HTTPException(
 )
 
 
-def get(*, db_session, user_id: int) -> Optional[MeteorUser]:
+async def get(*, db_session: DbSession, user_id: UUID) -> Optional[MeteorUser]:
     """Returns a user based on the given user id."""
-    return db_session.query(MeteorUser).filter(MeteorUser.id == user_id).one_or_none()
+    return await db_session.scalar(select(MeteorUser).where(MeteorUser.id == user_id))
 
 
-def get_by_email(*, db_session, email: str) -> Optional[MeteorUser]:
+async def get_by_email(*, db_session: DbSession, email: str) -> Optional[MeteorUser]:
     """Returns a user object based on user email."""
-    return db_session.query(MeteorUser).filter(MeteorUser.email == email).one_or_none()
+    return await db_session.scalar(select(MeteorUser).where(MeteorUser.email == email))
 
 
-def create_or_update_organization_role(*, db_session, user: MeteorUser, role_in: UserOrganization):
+async def create_or_update_organization_role(*, db_session: DbSession, user: MeteorUser, role_in: UserOrganization):
     """Creates a new organization role or updates an existing role."""
     if not role_in.organization.id:
-        organization = organization_service.get_by_name(db_session=db_session, name=role_in.organization.name)
+        organization = await organization_service.get_by_name(db_session=db_session, name=role_in.organization.name)
         organization_id = organization.id
     else:
         organization_id = role_in.organization.id
 
-    organization_role = (
-        db_session.query(MeteorUserOrganization)
-        .filter(
+    # organization_role = (
+    #     db_session.query(MeteorUserOrganization)
+    #     .filter(
+    #         MeteorUserOrganization.meteor_user_id == user.id,
+    #     )
+    #     .filter(MeteorUserOrganization.organization_id == organization_id)
+    #     .one_or_none()
+    # )
+    organization_role = await db_session.scalar(
+        select(MeteorUserOrganization).where(
             MeteorUserOrganization.meteor_user_id == user.id,
+            MeteorUserOrganization.organization_id == organization_id,
         )
-        .filter(MeteorUserOrganization.organization_id == organization_id)
-        .one_or_none()
     )
 
     if not organization_role:
@@ -76,15 +80,17 @@ def create_or_update_organization_role(*, db_session, user: MeteorUser, role_in:
     return organization_role
 
 
-def create(*, db_session, organization: str, user_in: (UserRegister | UserCreate)) -> MeteorUser:
+async def create(*, db_session: DbSession, organization: str, user_in: (UserRegister | UserCreate)) -> MeteorUser:
     """Creates a new meteor user."""
     # pydantic forces a string password, but we really want bytes
     password = bytes(user_in.password, "utf-8")
 
     # create the user
-    user = MeteorUser(**user_in.dict(exclude={"password", "organizations", "projects", "role"}), password=password)
+    user = MeteorUser(
+        **user_in.model_dump(exclude={"password", "organizations", "projects", "role"}), password=password
+    )
 
-    org = organization_service.get_by_slug_or_raise(
+    org = await organization_service.get_by_slug_or_raise(
         db_session=db_session,
         organization_in=OrganizationRead(name=organization, slug=organization),
     )
@@ -96,52 +102,41 @@ def create(*, db_session, organization: str, user_in: (UserRegister | UserCreate
 
     user.organizations.append(MeteorUserOrganization(organization=org, role=role))
 
-    db_session.add(user)
-    db_session.commit()
-    return user
+    return db_session.scalar(insert(MeteorUser).values(user).returning(MeteorUser))
 
 
-def get_or_create(*, db_session, organization: str, user_in: UserRegister) -> MeteorUser:
+async def get_or_create(*, db_session: DbSession, organization: str, user_in: UserRegister) -> MeteorUser:
     """Gets an existing user or creates a new one."""
-    user = get_by_email(db_session=db_session, email=user_in.email)
+    user = await get_by_email(db_session=db_session, email=user_in.email)
 
     if not user:
         try:
-            user = create(db_session=db_session, organization=organization, user_in=user_in)
+            user = await create(db_session=db_session, organization=organization, user_in=user_in)
         except IntegrityError:
-            db_session.rollback()
             log.exception(f"Unable to create user with email address {user_in.email}.")
 
     return user
 
 
-def update(*, db_session, user: MeteorUser, user_in: UserUpdate) -> MeteorUser:
+async def update_user(*, db_session: DbSession, user_in: UserUpdate) -> MeteorUser:
     """Updates a user."""
-    user_data = user.dict()
 
-    update_data = user_in.dict(exclude={"password", "organizations", "projects"}, skip_defaults=True)
-    for field in user_data:
-        if field in update_data:
-            setattr(user, field, update_data[field])
+    update_data = MeteorUser(user_in.model_dump(exclude={"password", "organizations", "projects"}, skip_defaults=True))
+
 
     if user_in.password:
-        password = bytes(user_in.password, "utf-8")
-        user.password = password
+        update_data.password = bytes(user_in.password, "utf-8")
 
     if user_in.organizations:
         roles = []
 
         for role in user_in.organizations:
-            roles.append(create_or_update_organization_role(db_session=db_session, user=user, role_in=role))
+            roles.append(create_or_update_organization_role(db_session=db_session, user=update_data, role_in=role))
 
-    if experimental_features := user_in.experimental_features:
-        user.experimental_features = experimental_features
-
-    db_session.commit()
-    return user
+    return db_session.scalar(update(MeteorUser).where(MeteorUser.id == user_in.id).values(update_data).returning(MeteorUser))
 
 
-def get_current_user(request: Request) -> MeteorUser:
+async def get_current_user(request: Request) -> MeteorUser:
     """Attempts to get the current user depending on the configured authentication provider."""
     if METEOR_AUTHENTICATION_PROVIDER_SLUG:
         auth_plugin = plugins.get(METEOR_AUTHENTICATION_PROVIDER_SLUG)
@@ -166,6 +161,6 @@ def get_current_user(request: Request) -> MeteorUser:
 CurrentUser = Annotated[MeteorUser, Depends(get_current_user)]
 
 
-def get_current_role(request: Request, current_user: MeteorUser = Depends(get_current_user)) -> UserRoles:
+async def get_current_role(request: Request, current_user: MeteorUser = Depends(get_current_user)) -> UserRoles:
     """Attempts to get the current user depending on the configured authentication provider."""
     return current_user.get_organization_role(organization_slug=request.state.organization)

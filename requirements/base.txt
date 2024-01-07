@@ -19,11 +19,14 @@ python-dotenv
 python-jose
 PyYAML
 sh
+slugify
 sniffio
 starlette
 SQLAlchemy
 sqlalchemy-filters
 sqlalchemy-utils
+sortedcontainers
+tabulate
 typing_extensions
 uvicorn
 uvloop

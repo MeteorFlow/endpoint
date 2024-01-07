@@ -1,5 +1,4 @@
-import string
-import secrets
+
 from typing import List
 from datetime import datetime, timedelta
 from sqlalchemy.dialects.postgresql import UUID
@@ -7,7 +6,7 @@ from sqlalchemy.dialects.postgresql import UUID
 import bcrypt
 from jose import jwt
 from typing import Optional
-from pydantic import validator, Field
+from pydantic import field_validator, field_validator, Field
 from pydantic.networks import EmailStr
 
 from sqlalchemy import DateTime, Column, String, LargeBinary, Integer, Boolean
@@ -24,27 +23,6 @@ from meteor.database.core import Base
 from meteor.enums import UserRoles
 from meteor.models import OrganizationSlug, TimeStampMixin, MeteorBase, Pagination, UUIDMixin
 from meteor.organization.models import Organization, OrganizationRead
-
-
-def generate_password():
-    """Generates a reasonable password if none is provided."""
-    alphanumeric = string.ascii_letters + string.digits
-    while True:
-        password = "".join(secrets.choice(alphanumeric) for i in range(10))
-        if (
-            any(c.islower() for c in password)
-            and any(c.isupper() for c in password)  # noqa
-            and sum(c.isdigit() for c in password) >= 3  # noqa
-        ):
-            break
-    return password
-
-
-def hash_password(password: str):
-    """Generates a hashed version of the provided password."""
-    pw = bytes(password, "utf-8")
-    salt = bcrypt.gensalt()
-    return bcrypt.hashpw(pw, salt)
 
 
 class MeteorUser(Base, TimeStampMixin, UUIDMixin):
@@ -91,79 +69,4 @@ class MeteorUserOrganization(Base, TimeStampMixin):
     role = Column(String, default=UserRoles.member)
 
 
-class UserOrganization(MeteorBase):
-    organization: OrganizationRead
-    default: Optional[bool] = False
-    role: Optional[str] = Field(None, nullable=True)
 
-
-class UserBase(MeteorBase):
-    email: EmailStr
-    organizations: Optional[List[UserOrganization]] = []
-
-    @validator("email")
-    def email_required(cls, v):
-        if not v:
-            raise ValueError("Must not be empty string and must be a email")
-        return v
-
-
-class UserLogin(UserBase):
-    password: str
-
-    @validator("password")
-    def password_required(cls, v):
-        if not v:
-            raise ValueError("Must not be empty string")
-        return v
-
-
-class UserRegister(UserLogin):
-    password: Optional[str] = Field(None, nullable=True)
-
-    @validator("password", pre=True, always=True)
-    def password_required(cls, v):
-        # we generate a password for those that don't have one
-        password = v or generate_password()
-        return hash_password(password)
-
-
-class UserLoginResponse(MeteorBase):
-    token: Optional[str] = Field(None, nullable=True)
-
-
-class UserRead(UserBase):
-    id: UUID
-    role: Optional[str] = Field(None, nullable=True)
-    experimental_features: Optional[bool]
-
-
-class UserUpdate(MeteorBase):
-    id: UUID
-    password: Optional[str] = Field(None, nullable=True)
-    organizations: Optional[List[UserOrganization]]
-    experimental_features: Optional[bool]
-    role: Optional[str] = Field(None, nullable=True)
-
-    @validator("password", pre=True)
-    def hash(cls, v):
-        return hash_password(str(v))
-
-
-class UserCreate(MeteorBase):
-    email: EmailStr
-    password: Optional[str] = Field(None, nullable=True)
-    # organizations: Optional[List[UserOrganization]]
-    role: Optional[str] = Field(None, nullable=True)
-
-    @validator("password", pre=True)
-    def hash(cls, v):
-        return hash_password(str(v))
-
-
-class UserRegisterResponse(MeteorBase):
-    token: Optional[str] = Field(None, nullable=True)
-
-
-class UserPagination(Pagination):
-    items: List[UserRead] = []

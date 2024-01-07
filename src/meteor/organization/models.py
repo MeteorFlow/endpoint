@@ -1,7 +1,6 @@
 from uuid import UUID
 from slugify import slugify
 from pydantic import Field
-from pydantic.color import Color
 
 from typing import List, Optional
 
@@ -23,7 +22,6 @@ class Organization(Base):
     default = Column(Boolean)
     description = Column(String)
     banner_enabled = Column(Boolean)
-    banner_color = Column(String)
     banner_text = Column(String)
 
     search_vector = Column(TSVectorType("name", "description", weights={"name": "A", "description": "B"}))
@@ -44,7 +42,6 @@ class OrganizationBase(MeteorBase):
     description: Optional[str] = Field(None, nullable=True)
     default: Optional[bool] = Field(False, nullable=True)
     banner_enabled: Optional[bool] = Field(False, nullable=True)
-    banner_color: Optional[Color] = Field(None, nullable=True)
     banner_text: Optional[NameStr] = Field(None, nullable=True)
 
 
@@ -57,7 +54,6 @@ class OrganizationUpdate(MeteorBase):
     description: Optional[str] = Field(None, nullable=True)
     default: Optional[bool] = Field(False, nullable=True)
     banner_enabled: Optional[bool] = Field(False, nullable=True)
-    banner_color: Optional[Color] = Field(None, nullable=True)
     banner_text: Optional[NameStr] = Field(None, nullable=True)
 
 

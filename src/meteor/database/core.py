@@ -1,6 +1,7 @@
 import functools
+import logging
 import re
-from typing import Annotated, Any
+from typing import Annotated, Any, AsyncIterator
 
 from fastapi import Depends
 from sqlalchemy import MetaData, create_engine, inspect
@@ -9,36 +10,38 @@ from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy.orm import Session, sessionmaker, object_session
 from sqlalchemy_utils import get_mapper
 from pydantic.errors import PydanticErrorMixin
-from starlette.requests import Request
+from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine, AsyncSession
 
 from meteor import config
 from meteor.exceptions import NotFoundError
 from meteor.search.fulltext import make_searchable
 
-engine = create_engine(
+logger = logging.getLogger(__name__)
+
+engine = create_async_engine(
     config.SQLALCHEMY_DATABASE_URI,
     pool_size=config.DATABASE_ENGINE_POOL_SIZE,
     max_overflow=config.DATABASE_ENGINE_MAX_OVERFLOW,
     pool_pre_ping=config.DATABASE_ENGINE_POOL_PING,
 )
 
+SessionLocal = async_sessionmaker(
+    bind=engine,
+    autoflush=False,
+    future=True,
+)
 
-def get_db(request: Request):
-    return request.state.db
+
+async def get_session() -> AsyncIterator[async_sessionmaker]:
+    try:
+        yield SessionLocal
+    except SQLAlchemyError as e:
+        logger.exception(e)
 
 
-DbSession = Annotated[Session, Depends(get_db)]
-
-SessionLocal = sessionmaker(bind=engine)
-
-DB_NAMING_CONVENTION = {
-    "ix": "%(column_0_label)s_idx",
-    "uq": "%(table_name)s_%(column_0_name)s_key",
-    "ck": "%(table_name)s_%(constraint_name)s_check",
-    "fk": "%(table_name)s_%(column_0_name)s_fkey",
-    "pk": "%(table_name)s_pkey",
-}
-metadata = MetaData(naming_convention=DB_NAMING_CONVENTION)
+DbSession = Annotated[AsyncSession, Depends(get_session)]
 
 
 def resolve_table_name(name):
@@ -58,7 +61,7 @@ def resolve_attr(obj, attr, default=None):
         return default
 
 
-class BaseEntity:
+class Base(DeclarativeBase):
     __repr_attrs__ = []
     __repr_max_length__ = 15
 
@@ -111,7 +114,6 @@ class BaseEntity:
         )
 
 
-Base = declarative_base(cls=BaseEntity)
 make_searchable(Base.metadata)
 
 
@@ -172,11 +174,11 @@ def ensure_unique_default_per_project(target, value, oldvalue, initiator):
                 session.commit()
 
 
-def refetch_db_session(organization_slug: str) -> Session:
+def refetch_db_session(organization_slug: str) -> AsyncSession:
     schema_engine = engine.execution_options(
         schema_translate_map={
             None: f"meteor_organization_{organization_slug}",
         }
     )
-    db_session = sessionmaker(bind=schema_engine)()
+    db_session = async_sessionmaker(bind=schema_engine)()
     return db_session

@@ -39,7 +39,7 @@ class IPlugin(local):
     A plugin should be treated as if it were a singleton. The owner does not
     control when or how the plugin gets instantiated, nor is it guaranteed that
     it will happen, or happen more than once.
-    >>> from meteor.plugins import Plugin
+    >>> from meteor.plugins.base import Plugin
     >>>
     >>> class MyPlugin(Plugin):
     >>>     def get_title(self):
@@ -72,7 +72,7 @@ class IPlugin(local):
     def is_enabled(self) -> bool:
         """
         Returns a boolean representing if this plugin is enabled.
-        >>> plugin.is_enabled()
+        # >>> plugin.is_enabled()
         """
         if not self.enabled:
             return False
@@ -83,7 +83,7 @@ class IPlugin(local):
     def get_title(self) -> Optional[str]:
         """
         Returns the general title for this plugin.
-        >>> plugin.get_title()
+        # >>> plugin.get_title()
         """
         return self.title
 

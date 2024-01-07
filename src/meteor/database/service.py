@@ -21,22 +21,22 @@ from sqlalchemy_filters.models import Field, get_model_from_spec
 
 from meteor.auth.models import MeteorUser
 from meteor.auth.service import CurrentUser, get_current_role
-from meteor.case.models import Case
-from meteor.data.query.models import Query as QueryModel
-from meteor.data.source.models import Source
+# from meteor.case.models import Case
+# from meteor.data.query.models import Query as QueryModel
+# from meteor.data.source.models import Source
 from meteor.database.core import DbSession
 from meteor.enums import UserRoles, Visibility
 from meteor.exceptions import FieldNotFoundError, InvalidFilterError
-from meteor.feedback.incident.models import Feedback
-from meteor.incident.models import Incident
-from meteor.incident.type.models import IncidentType
-from meteor.individual.models import IndividualContact
-from meteor.participant.models import Participant
+# from meteor.feedback.incident.models import Feedback
+# from meteor.incident.models import Incident
+# from meteor.incident.type.models import IncidentType
+# from meteor.individual.models import IndividualContact
+# from meteor.participant.models import Participant
 from meteor.plugin.models import Plugin, PluginInstance
 from meteor.search.fulltext.composite_search import CompositeSearch
-from meteor.signal.models import Signal, SignalInstance
-from meteor.tag.models import Tag
-from meteor.task.models import Task
+# from meteor.signal.models import Signal, SignalInstance
+# from meteor.tag.models import Tag
+# from meteor.task.models import Task
 
 from .core import Base, get_class_by_tablename, get_model_name_by_tablename
 
@@ -330,29 +330,29 @@ def apply_filter_specific_joins(model: Base, filter_spec: dict, query: orm.query
     # this is required because by default sqlalchemy-filter's auto-join
     # knows nothing about how to join many-many relationships.
     model_map = {
-        (Feedback, "Project"): (Incident, False),
-        (Feedback, "Incident"): (Incident, False),
-        (Task, "Project"): (Incident, False),
-        (Task, "Incident"): (Incident, False),
-        (Task, "IncidentPriority"): (Incident, False),
-        (Task, "IncidentType"): (Incident, False),
+        # (Feedback, "Project"): (Incident, False),
+        # (Feedback, "Incident"): (Incident, False),
+        # (Task, "Project"): (Incident, False),
+        # (Task, "Incident"): (Incident, False),
+        # (Task, "IncidentPriority"): (Incident, False),
+        # (Task, "IncidentType"): (Incident, False),
         (PluginInstance, "Plugin"): (Plugin, False),
-        (Source, "Tag"): (Source.tags, True),
-        (Source, "TagType"): (Source.tags, True),
-        (QueryModel, "Tag"): (QueryModel.tags, True),
-        (QueryModel, "TagType"): (QueryModel.tags, True),
+        # (Source, "Tag"): (Source.tags, True),
+        # (Source, "TagType"): (Source.tags, True),
+        # (QueryModel, "Tag"): (QueryModel.tags, True),
+        # (QueryModel, "TagType"): (QueryModel.tags, True),
         (MeteorUser, "Organization"): (MeteorUser.organizations, True),
-        (Case, "Tag"): (Case.tags, True),
-        (Case, "TagType"): (Case.tags, True),
-        (Incident, "Tag"): (Incident.tags, True),
-        (Incident, "TagType"): (Incident.tags, True),
-        (Incident, "IndividualContact"): (Incident.participants, True),
-        (Incident, "Term"): (Incident.terms, True),
-        (Signal, "Tag"): (Signal.tags, True),
-        (Signal, "TagType"): {Signal.tags, True},
-        (SignalInstance, "Entity"): (SignalInstance.entities, True),
-        (SignalInstance, "EntityType"): (SignalInstance.entities, True),
-        (Tag, "TagType"): (Tag.tag_type, False),
+        # (Case, "Tag"): (Case.tags, True),
+        # (Case, "TagType"): (Case.tags, True),
+        # (Incident, "Tag"): (Incident.tags, True),
+        # (Incident, "TagType"): (Incident.tags, True),
+        # (Incident, "IndividualContact"): (Incident.participants, True),
+        # (Incident, "Term"): (Incident.terms, True),
+        # (Signal, "Tag"): (Signal.tags, True),
+        # (Signal, "TagType"): {Signal.tags, True},
+        # (SignalInstance, "Entity"): (SignalInstance.entities, True),
+        # (SignalInstance, "EntityType"): (SignalInstance.entities, True),
+        # (Tag, "TagType"): (Tag.tag_type, False),
     }
     filters = build_filters(filter_spec)
 
